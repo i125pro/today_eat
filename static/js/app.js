@@ -535,12 +535,18 @@ $('dishImage').addEventListener('change', (e) => {
   $('uploadPreview').innerHTML = `<img src="${url}" alt="预览">`;
 });
 
+let addingDish = false;
 $('addDishBtn').addEventListener('click', async () => {
+  if (addingDish) return;
   const name = $('dishNameInput').value.trim();
   if (!name) return toast('请先填写菜名');
   const fd = new FormData();
   fd.append('name', name);
   if (state.uploadFile) fd.append('image', state.uploadFile);
+  addingDish = true;
+  const btn = $('addDishBtn');
+  btn.disabled = true;
+  btn.textContent = '上传中…';
   try {
     await api('/api/dishes', { method: 'POST', body: fd });
     $('dishNameInput').value = '';
@@ -551,6 +557,10 @@ $('addDishBtn').addEventListener('click', async () => {
     await loadDishes();
   } catch (e) {
     toast(e.message);
+  } finally {
+    addingDish = false;
+    btn.disabled = false;
+    btn.textContent = '添加到菜库';
   }
 });
 
@@ -607,6 +617,24 @@ async function patchRecord(id, body) {
   });
 }
 
+function pruneEmptyGroups(container) {
+  if (!container) return;
+  let title = null;
+  let hasItem = false;
+  const toRemove = [];
+  Array.from(container.children).forEach((c) => {
+    if (c.classList.contains('meal-group-title')) {
+      if (title && !hasItem) toRemove.push(title);
+      title = c;
+      hasItem = false;
+    } else if (c.classList.contains('record-item')) {
+      hasItem = true;
+    }
+  });
+  if (title && !hasItem) toRemove.push(title);
+  toRemove.forEach((t) => t.remove());
+}
+
 async function removeWithAnim(el, action) {
   try {
     await action();
@@ -627,9 +655,21 @@ async function removeWithAnim(el, action) {
   el.style.paddingTop = '0';
   el.style.paddingBottom = '0';
   el.style.borderWidth = '0';
+  const container = el.parentElement;
+  const dayItem = el.closest('.day-item');
+  const countEl = dayItem ? dayItem.querySelector('.day-count') : null;
   setTimeout(() => {
     el.remove();
-    loadHistory();
+    pruneEmptyGroups(container);
+    if (countEl) {
+      const m = countEl.textContent.match(/\d+/);
+      if (m) {
+        countEl.textContent = countEl.textContent.replace(/\d+/, String(Math.max(0, parseInt(m[0], 10) - 1)));
+      }
+    }
+    if (container && container.id === 'todayList' && !container.querySelector('.record-item')) {
+      container.innerHTML = '<div class="empty-tip">今天还没决定吃什么哦</div>';
+    }
     loadLeftovers();
   }, 380);
 }

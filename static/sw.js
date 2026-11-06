@@ -1,4 +1,4 @@
-const CACHE = 'what-to-eat-v6';
+const CACHE = 'what-to-eat-v7';
 const ASSETS = [
   '/',
   '/static/css/style.css',

@@ -1,6 +1,7 @@
 import os
 import sqlite3
 import random
+import hashlib
 from datetime import datetime, timezone, timedelta
 
 from flask import Flask, request, jsonify, render_template, send_from_directory
@@ -56,6 +57,7 @@ def init_db():
             name TEXT NOT NULL,
             emoji TEXT NOT NULL DEFAULT '🍽️',
             image TEXT,
+            image_md5 TEXT,
             created_at TEXT NOT NULL DEFAULT (datetime('now','+8 hours'))
         );
         CREATE TABLE IF NOT EXISTS records (
@@ -72,6 +74,9 @@ def init_db():
         conn.execute("ALTER TABLE records ADD COLUMN meal TEXT NOT NULL DEFAULT 'dinner'")
     if 'leftover' not in cols:
         conn.execute("ALTER TABLE records ADD COLUMN leftover INTEGER NOT NULL DEFAULT 0")
+    dish_cols = [r[1] for r in conn.execute('PRAGMA table_info(dishes)')]
+    if 'image_md5' not in dish_cols:
+        conn.execute('ALTER TABLE dishes ADD COLUMN image_md5 TEXT')
     if conn.execute('SELECT COUNT(*) FROM dishes').fetchone()[0] == 0:
         conn.executemany(
             'INSERT INTO dishes (name, emoji) VALUES (?, ?)', DEFAULT_DISHES)
@@ -130,17 +135,31 @@ def add_dish():
         return jsonify({'error': '请填写菜名'}), 400
     emoji = (request.form.get('emoji') or '🍽️').strip() or '🍽️'
     image_name = None
+    image_md5 = None
     file = request.files.get('image')
     if file and file.filename:
         ext = file.filename.rsplit('.', 1)[-1].lower()
         if ext not in ALLOWED_EXT:
             return jsonify({'error': '仅支持 png/jpg/jpeg/gif/webp 图片'}), 400
-        image_name = f'{today_cn().replace("-", "")}_{random.randint(10000, 99999)}.{ext}'
-        file.save(os.path.join(UPLOAD_DIR, image_name))
+        data = file.read()
+        image_md5 = hashlib.md5(data).hexdigest()
     conn = get_db()
+    dup = conn.execute('''
+        SELECT * FROM dishes
+        WHERE name = ? AND COALESCE(image_md5, '') = COALESCE(?, '')
+          AND created_at >= datetime('now','+8 hours','-10 minutes')
+        ORDER BY id DESC LIMIT 1
+    ''', (name, image_md5)).fetchone()
+    if dup:
+        conn.close()
+        return jsonify(dish_to_dict(dup)), 200
+    if image_md5:
+        image_name = f'{today_cn().replace("-", "")}_{random.randint(10000, 99999)}.{ext}'
+        with open(os.path.join(UPLOAD_DIR, image_name), 'wb') as f:
+            f.write(data)
     cur = conn.execute(
-        'INSERT INTO dishes (name, emoji, image) VALUES (?, ?, ?)',
-        (name, emoji, image_name))
+        'INSERT INTO dishes (name, emoji, image, image_md5) VALUES (?, ?, ?, ?)',
+        (name, emoji, image_name, image_md5))
     row = conn.execute('SELECT * FROM dishes WHERE id = ?', (cur.lastrowid,)).fetchone()
     conn.commit()
     conn.close()
