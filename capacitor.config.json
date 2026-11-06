@@ -1,0 +1,11 @@
+{
+  "appId": "com.example.whattolatteat",
+  "appName": "今天吃什么",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "http://YOUR_SERVER_IP:PORT",
+    "cleartext": true,
+    "androidScheme": "http"
+  }
+}

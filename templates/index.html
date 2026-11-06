@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#eef1f7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="今天吃什么">
+<title>今天吃什么</title>
+<link rel="manifest" href="/static/manifest.json">
+<link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="bg">
+  <div class="blob blob-a"></div>
+  <div class="blob blob-b"></div>
+  <div class="blob blob-c"></div>
+</div>
+
+<header class="top-header">
+  <h1 id="pageTitle">今天吃什么</h1>
+  <p class="subtitle" id="todayDate"></p>
+</header>
+
+<main id="main">
+
+  <section id="view-pick" class="view active">
+    <div class="leftover-banner glass" id="leftoverBanner" style="display:none">
+      <button class="lb-head" id="leftoverHead">
+        <span class="lb-ico">🥡</span>
+        <span class="lb-title">冰箱里有剩菜</span>
+        <span class="lb-count" id="leftoverCount">0</span>
+        <span class="lb-arrow" id="leftoverArrow">›</span>
+      </button>
+      <div class="lb-list" id="leftoverList"></div>
+    </div>
+    <div class="stage" id="stage"></div>
+    <div class="dish-caption">
+      <div class="dish-name" id="dishName">加载中…</div>
+      <div class="dish-count" id="dishCount"></div>
+    </div>
+    <button class="meal-pill glass" id="mealPill">🍱 记入午饭</button>
+    <div class="pick-actions">
+      <button class="glass-btn round" id="prevBtn" aria-label="上一个">‹</button>
+      <button class="primary-btn" id="spinBtn">🎲 一键选菜</button>
+      <button class="glass-btn round" id="nextBtn" aria-label="下一个">›</button>
+    </div>
+    <button class="confirm-btn" id="eatBtn">就吃这个</button>
+  </section>
+
+  <section id="view-menu" class="view">
+    <div class="upload-card glass">
+      <input type="file" id="dishImage" accept="image/*" hidden>
+      <button class="upload-preview" id="uploadPreview"><span>＋</span></button>
+      <div class="upload-fields">
+        <input type="text" id="dishNameInput" class="glass-input" placeholder="菜名，如：红烧肉" maxlength="20">
+        <button class="primary-btn" id="addDishBtn">添加到菜库</button>
+      </div>
+      <p class="upload-tip">点上方卡片选一张菜品照片（可选），菜名必填</p>
+    </div>
+    <div class="section-title">我的菜库</div>
+    <div class="dish-grid" id="dishGrid"></div>
+  </section>
+
+  <section id="view-history" class="view">
+    <div class="section-title">今天吃了</div>
+    <div class="today-list" id="todayList"></div>
+    <div class="section-title">往日记录</div>
+    <div class="day-accordion" id="dayAccordion"></div>
+  </section>
+
+</main>
+
+<nav class="tabbar glass">
+  <button class="tab active" data-view="pick"><span class="tab-ico">🍽️</span><span>选菜</span></button>
+  <button class="tab" data-view="menu"><span class="tab-ico">📚</span><span>菜库</span></button>
+  <button class="tab" data-view="history"><span class="tab-ico">📅</span><span>记录</span></button>
+</nav>
+
+<div class="modal-mask" id="resultModal">
+  <div class="modal glass">
+    <button class="modal-close" id="modalClose" aria-label="关闭">×</button>
+    <div class="modal-emoji" id="resultEmoji">🍽️</div>
+    <div class="modal-title">今天就吃</div>
+    <div class="modal-dish" id="resultName">—</div>
+    <div class="modal-meal" id="resultMeal">将记入午饭</div>
+    <div class="modal-actions">
+      <button class="glass-btn" id="reSpinBtn">再选选</button>
+      <button class="primary-btn" id="confirmEatBtn">就吃它！</button>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <button class="lb-nav lb-prev" id="lbPrev" aria-label="上一道">‹</button>
+  <div class="lb-stage" id="lbStage">
+    <img id="lightboxImg" alt="" style="display:none">
+    <div class="lightbox-emoji" id="lightboxEmoji" style="display:none"></div>
+  </div>
+  <button class="lb-nav lb-next" id="lbNext" aria-label="下一道">›</button>
+  <div class="lb-caption">
+    <div class="lightbox-name" id="lightboxName"></div>
+    <div class="lightbox-meta" id="lightboxMeta"></div>
+  </div>
+</div>
+
+<div class="toast glass" id="toast"></div>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>
